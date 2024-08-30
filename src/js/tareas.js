@@ -42,11 +42,46 @@
                     modal.remove();
                 }, 500);
             } 
+
+            if(e.target.classList.contains('submit-nueva-tarea')){
+                submitNuevoFormularioTarea();
+            }
         })
 
-        document.querySelector('body').appendChild(modal);
+        document.querySelector('.dashboard').appendChild(modal);
     }
 
+    function submitNuevoFormularioTarea() {
+        const tarea = document.querySelector('#tarea').value.trim();
+        if(tarea === ''){
+            //Mostrar alerta cuando detecte ningun valor
+            mostrarAlerta('¡El nombre de la tarea es obligatorio!', 'error', 
+                document.querySelector('.formulario legend'));
+            return;
+        } 
+        agregarTarea();
+    }
+    function mostrarAlerta(mensaje, tipo, referencia){
+        const alertaPrevia = document.querySelector('.alerta');
+        if(alertaPrevia) {
+            alertaPrevia.remove();
+        }
+        const alerta = document.createElement('DIV');
+        alerta.classList.add('alerta', tipo);
+        alerta.textContent = mensaje;
+
+
+        //Inserta la alerta antes del legend
+        referencia.parentElement.insertBefore(alerta, referencia.nextElementSibling);
+
+        setTimeout(() => {
+            alerta.remove();
+        }, 3000);
+    }
+
+    function agregarTarea(tarea){
+
+    }
 
 
 

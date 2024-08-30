@@ -58,7 +58,7 @@ class Email {
         $mail->CharSet = 'UTF-8';
 
         $contenido = '<html>';
-        $contenido .= "<p><strong>Hola" . $this->email . "</strong> has solicitado restablecer tu password, solo 
+        $contenido .= "<p><strong>Hola " . $this->email . "</strong> has solicitado restablecer tu password, solo 
         debes presionar en el siguiente enlace:</p>";
         $contenido .= "<p>Preciona aquí: <a href='http://localhost:3000/restablece?token=" . $this->token ."'>Restablecer Password</a></p>";
         $contenido .= '</html>';
