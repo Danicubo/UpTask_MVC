@@ -5,7 +5,9 @@
 
     //Boton para mostrar modal de tarea
     const nuevaTareaBtn = document.querySelector('#agregar-tarea');
-    nuevaTareaBtn.addEventListener('click', mostrarFormulario);
+    nuevaTareaBtn.addEventListener('click', function(){
+        mostrarFormulario();
+    });
 
     async function obtenerTareas(){
 
@@ -48,6 +50,9 @@
 
             const nombreTarea = document.createElement('P');
             nombreTarea.textContent = tarea.nombre
+            nombreTarea.ondblclick = function() {
+                mostrarFormulario(editar = true, {...tarea});
+            }
 
             const opcionesDiv = document.createElement('DIV');
             opcionesDiv.classList.add('opciones');
@@ -59,11 +64,17 @@
             btnEstadoTarea.textContent = estados[tarea.estado];
             btnEstadoTarea.classList.add(`${estados[tarea.estado].toLowerCase()}`);
             btnEstadoTarea.dataset.estadoTarea = tarea.estado;
+            btnEstadoTarea.ondblclick = function (){
+                cambiarEstadoTarea({...tarea});
+            };
 
             const btnEliminarTarea = document.createElement('BUTTON');
             btnEliminarTarea.classList.add('eliminar-tarea');
             btnEliminarTarea.dataset.idTarea = tarea.id;
             btnEliminarTarea.textContent = 'Eliminar';
+            btnEliminarTarea.ondblclick = function() {
+                confirmarEliminarTarea({...tarea});
+            }
          
             opcionesDiv.appendChild(btnEstadoTarea);
             opcionesDiv.appendChild(btnEliminarTarea);
@@ -76,26 +87,27 @@
         });
     }
 
-    function mostrarFormulario(){
+    function mostrarFormulario(editar = false, tarea = {}){
         const modal = document.createElement('DIV');
         modal.classList.add('modal');
         modal.innerHTML= `
             <form class="formulario nueva-tarea">
-                <legend>Añade una nueva tarea</legend>
+                <legend>${editar ?  'Editar Tarea' : 'Añade una nueva tarea'}</legend>
                 <div class="campo">
                     <label for="tarea">Tarea</label>
                     <input 
                         type="text" 
                         name="tarea" 
                         id="tarea"
-                        placeholder="Añadir Tarea al Proyecto Actual"
+                        placeholder="${tarea.nombre ? 'Edita la tarea': 'Añade una nueva tarea al proyecto actual'}"
+                        value="${tarea.nombre ? tarea.nombre : ''}"
                     />
                 </div>
                 <div class="opciones">
                     <input
                         type="submit"
                         class="submit-nueva-tarea"
-                        value="Nueva Tarea"
+                        value="${tarea.nombre ? 'Guardar Cambios': 'Añadir Tarea'}"
                     />
                     <button type="button" class="cerrar-modal">Cancelar</button>
                 </div>
@@ -117,23 +129,26 @@
             } 
 
             if(e.target.classList.contains('submit-nueva-tarea')){
-                submitNuevoFormularioTarea();
+                const nombreTarea = document.querySelector('#tarea').value.trim();
+                if(nombreTarea === ''){
+                    //Mostrar alerta cuando detecte ningun valor
+                    mostrarAlerta('¡El nombre de la tarea es obligatorio!', 'error', 
+                        document.querySelector('.formulario legend'));
+                    return;
+                } 
+
+                if(editar){
+                    tarea.nombre = nombreTarea;
+                    actualizarTarea(tarea);
+                } else {
+                    agregarTarea(nombreTarea);
+                }
             }
         })
 
         document.querySelector('.dashboard').appendChild(modal);
     }
 
-    function submitNuevoFormularioTarea() {
-        const tarea = document.querySelector('#tarea').value.trim();
-        if(tarea === ''){
-            //Mostrar alerta cuando detecte ningun valor
-            mostrarAlerta('¡El nombre de la tarea es obligatorio!', 'error', 
-                document.querySelector('.formulario legend'));
-            return;
-        } 
-        agregarTarea(tarea);
-    }
     function mostrarAlerta(mensaje, tipo, referencia){
         const alertaPrevia = document.querySelector('.alerta');
         if(alertaPrevia) {
@@ -195,6 +210,114 @@
 
     }
 
+    function cambiarEstadoTarea(tarea){
+        const nuevoEstado = tarea.estado === "1" ? "0" : "1";
+        tarea.estado = nuevoEstado;
+        actualizarTarea(tarea);
+    }
+    
+    async function actualizarTarea(tarea) {
+        const { estado, id, nombre, proyectoId } = tarea;
+        const datos = new FormData();
+        datos.append('estado', estado)
+        datos.append('id', id)
+        datos.append('nombre', nombre)
+        datos.append('proyectoId', obtenerProyecto());
+
+        /* for(let valor of datos.values()){
+            console.log(valor);
+        } */
+
+            try {
+                const url = '/api/tarea/actualizar'
+                const respuesta = await fetch(url, {
+                    method: 'POST',
+                    body: datos
+                });
+                
+                const resultado = await respuesta.json();
+
+                if(resultado.respuesta.tipo === 'exito'){
+                    
+                    Swal.fire(
+                        resultado.respuesta.mensaje,
+                        resultado.respuesta.mensaje,
+                        'success'
+                    )
+
+                    const modal = document.querySelector('.modal');
+                    if(modal){
+                        modal.remove();
+                    }
+
+
+                    tareas = tareas.map(tareaMemoria => {
+                        if(tareaMemoria.id === id) {
+                            tareaMemoria.estado = estado;
+                            tareaMemoria.nombre = nombre;
+                        }
+                        return tareaMemoria;
+                    });
+                    
+                    mostrarTareas();
+
+                }
+
+            } catch (error) {
+                console.log(error)
+            }   
+
+    }
+
+    function confirmarEliminarTarea(tarea) {
+        Swal.fire({
+            title: "¿Eliminar Tarea?",
+            showCancelButton: true,
+            confirmButtonText: "Si",
+            cancelButtonText: 'No'
+        }).then((result) => {
+            /* Read more about isConfirmed, isDenied below */
+            if (result.isConfirmed) {
+              eliminarTarea(tarea);
+            }
+        });
+    }
+
+    async function eliminarTarea(tarea) {
+
+        const { estado, id, nombre } = tarea;
+        const datos = new FormData();
+
+        datos.append('estado', estado)
+        datos.append('id', id)
+        datos.append('nombre', nombre)
+        datos.append('proyectoId', obtenerProyecto());
+
+        
+        try {
+            const url = '/api/tarea/eliminar'
+            const respuesta = await fetch(url, {
+                method: 'POST',
+                body: datos
+            });
+
+            const resultado = await respuesta.json();
+            if(resultado.resultado){
+               /*  mostrarAlerta(resultado.mensaje, 
+                    resultado.tipo,
+                    document.querySelector('.contenedor-nueva-tarea')
+                ); */
+
+                Swal.fire('Eliminado', resultado.mensaje, 'success')
+
+                tareas = tareas.filter(tareaMemoria => tareaMemoria.id !== tarea.id );
+                mostrarTareas();
+            }
+            
+        } catch (error) {
+            console.error(error)
+        }
+    }
     function obtenerProyecto(){
         const proyectoParams = new URLSearchParams(window.location.search); // Busca la url actual donde estás ubicado
         const proyecto = Object.fromEntries(proyectoParams.entries()); // Agrega el valor de la url actual
@@ -210,4 +333,4 @@
     }
 
 
-})();//IIEF evita que se mezclen las variables
+})();//IIEF evita que se mezclen las variables con otros archivos
