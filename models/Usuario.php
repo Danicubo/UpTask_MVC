@@ -11,6 +11,8 @@ class Usuario extends ActiveRecord {
     public $email;
     public $password;
     public $password2;
+    public $password_nuevo;
+    public $password_actual;
     public $token;
     public $confirmado;
 
@@ -20,6 +22,8 @@ class Usuario extends ActiveRecord {
         $this->email = $args['email'] ?? '';
         $this->password = $args['password'] ?? '';
         $this->password2 = $args['password2'] ?? '';
+        $this->password_actual = $args['password_actual'] ?? '';
+        $this->password_nuevo = $args['password_nuevo'] ?? '';
         $this->token = $args['token'] ?? '';
         $this->confirmado = $args['confirmado'] ?? '';
     }
@@ -64,11 +68,15 @@ class Usuario extends ActiveRecord {
         return self::$alertas;
     }
 
-    public function hashPassword(){
+    public function comprobarPassword() : bool {
+        return password_verify($this->password_actual, $this->password);
+    }
+
+    public function hashPassword() : void {
         $this->password = password_hash($this->password, PASSWORD_BCRYPT);
     }
 
-    public function crearToken(){
+    public function crearToken() : void {
         $this->token = uniqid();
     }
     public function validarEmail(){
@@ -80,12 +88,35 @@ class Usuario extends ActiveRecord {
         }
         return self::$alertas;
     }
-    public function validarPassword(){
+    public function validarPassword() : array {
         if(!$this->password){
             self::$alertas['error'][] = "El password del usuario es obligatorio";
         }
         if(strlen($this->password) < 6){
             self::$alertas['error'][] = "El password debe contener al menos 6 carácteres";
+        }
+        return self::$alertas;
+    }
+
+    public function nuevo_password() : array {
+        if(!$this->password_actual){
+            self::$alertas['error'][] = "El password actual es obligatorio";
+        }
+        if(!$this->password_nuevo){
+            self::$alertas['error'][] = "El password es obligatorio";
+        }
+        if(strlen($this->password_nuevo) < 6){
+            self::$alertas['error'][] = "El password debe contener al menos 6 carácteres";
+        }
+        return self::$alertas;
+    }
+
+    public function validar_perfil(){
+        if(!$this->nombre){
+            self::$alertas['error'][] = "El nombre del usuario es obligatorio";
+        }
+        if(!$this->email){
+            self::$alertas['error'][] = "El email del usuario es obligatorio";
         }
         return self::$alertas;
     }
