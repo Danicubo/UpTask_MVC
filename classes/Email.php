@@ -17,11 +17,11 @@ class Email {
     public function enviarConfirmacion() {
         $mail = new PHPMailer();
         $mail->isSMTP();
-        $mail->Host = 'sandbox.smtp.mailtrap.io';
+        $mail->Host = $_ENV['EMAIL_HOST'];
         $mail->SMTPAuth = true;
-        $mail->Port = 2525;
-        $mail->Username = '693a1a0ec89382';
-        $mail->Password = 'e391148a845777';
+        $mail->Port = $_ENV['EMAIL_PORT'];
+        $mail->Username = $_ENV['EMAIL_USER'];
+        $mail->Password = $_ENV['EMAIL_PASS'];
 
         $mail->setFrom('cuentas@uptask.com');
         $mail->addAddress('cuentas@uptask.com', 'uptask.com');
@@ -33,7 +33,7 @@ class Email {
         $contenido = '<html>';
         $contenido .= "<p><strong>Hola" . $this->email . "</strong> has creado tu cuenta en UpTask, solo 
         debes confirmarla en el siguiente enlace:</p>";
-        $contenido .= "<p>Preciona aquí: <a href='http://localhost:3000/confirmar?token=" . $this->token ."'>Confirmar Cuenta</a></p>";
+        $contenido .= "<p>Preciona aquí: <a href='". $_ENV['APP_URL'] . "/confirmar?token=" . $this->token ."'>Confirmar Cuenta</a></p>";
         $contenido .= "<p>Si no creaste esta cuenta, haz caso omiso a este correo</p>";
         $contenido .= '</html>';
 
@@ -44,11 +44,11 @@ class Email {
     public function enviarInstrucciones(){
         $mail = new PHPMailer();
         $mail->isSMTP();
-        $mail->Host = 'sandbox.smtp.mailtrap.io';
+        $mail->Host = $_ENV['EMAIL_HOST'];
         $mail->SMTPAuth = true;
-        $mail->Port = 2525;
-        $mail->Username = '693a1a0ec89382';
-        $mail->Password = 'e391148a845777';
+        $mail->Port = $_ENV['EMAIL_PORT'];
+        $mail->Username = $_ENV['EMAIL_USER'];
+        $mail->Password = $_ENV['EMAIL_PASS'];
 
         $mail->setFrom('cuentas@uptask.com');
         $mail->addAddress('cuentas@uptask.com', 'uptask.com');
@@ -60,7 +60,7 @@ class Email {
         $contenido = '<html>';
         $contenido .= "<p><strong>Hola " . $this->email . "</strong> has solicitado restablecer tu password, solo 
         debes presionar en el siguiente enlace:</p>";
-        $contenido .= "<p>Preciona aquí: <a href='http://localhost:3000/restablecer?token=" . $this->token ."'>Restablecer Password</a></p>";
+        $contenido .= "<p>Preciona aquí: <a href='". $_ENV['APP_URL'] . "/restablecer?token=" . $this->token ."'>Restablecer Password</a></p>";
         $contenido .= '</html>';
 
         $mail->Body = $contenido;

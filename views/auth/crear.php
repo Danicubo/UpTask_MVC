@@ -45,7 +45,7 @@
                 name="password2"
                 />
             </div>
-            <input type="submit" value="Iniciar Sesión" class="boton">
+            <input type="submit" value="Crear Cuenta" class="boton">
             <div class="acciones">
                 <a href="/">¿Ya tienes una cuenta? Iniciar Sesión</a>
                 <a href="/olvide">¿Olvidaste tu password? Restablece aquí</a>
